@@ -11,8 +11,5 @@
       "database_name": "yifei-cai-study",
       "migrations_dir": "drizzle"
     }
-  ],
-  "r2_buckets": [
-    { "binding": "BUCKET", "bucket_name": "yifei-cai-study-images" }
   ]
 }
