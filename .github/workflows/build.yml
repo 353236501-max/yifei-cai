@@ -1,0 +1,21 @@
+name: Validate Cloudflare build
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+      - run: npm install --global npm@10.9.2
+      - run: npm ci --include=optional
+      - run: npx tsc --noEmit
+      - run: npm run build
+      - run: npm run deploy:check
