@@ -1,0 +1,5 @@
+export async function importKey(secret:string){if(!/^[0-9a-f]{64}$/i.test(secret))throw new Error('加密存储尚未配置');return crypto.subtle.importKey('raw',new Uint8Array(secret.match(/../g)!.map(x=>parseInt(x,16))),{name:'AES-GCM'},false,['encrypt','decrypt']);}
+export async function seal(data:Uint8Array,secret:string,aad:string){const iv=crypto.getRandomValues(new Uint8Array(12));const out=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(aad)},await importKey(secret),data as BufferSource);const result=new Uint8Array(12+out.byteLength);result.set(iv);result.set(new Uint8Array(out),12);return result;}
+export async function unseal(data:Uint8Array,secret:string,aad:string){return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:data.slice(0,12),additionalData:new TextEncoder().encode(aad)},await importKey(secret),data.slice(12)));}
+export function base64(data:Uint8Array){let s='';for(const b of data)s+=String.fromCharCode(b);return btoa(s);}
+export function fromBase64(s:string){return Uint8Array.from(atob(s),x=>x.charCodeAt(0));}

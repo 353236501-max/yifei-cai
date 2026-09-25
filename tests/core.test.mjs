@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {seal,unseal,base64,fromBase64} from '../lib/crypto.ts';
+import {gradeAnswer,exercise} from '../lib/exercises.ts';
+import {topics} from '../lib/curriculum.ts';
+import {fsrs,createEmptyCard,Rating} from 'ts-fsrs';
+test('encrypted record cannot be read with another owner or after tampering',async()=>{const key='1a'.repeat(32),input=new TextEncoder().encode('private mistake');const a=await seal(input,key,'owner-A:id'),b=await seal(input,key,'owner-A:id');assert.notEqual(base64(a),base64(b));assert.deepEqual(await unseal(fromBase64(base64(a)),key,'owner-A:id'),input);await assert.rejects(()=>unseal(a,key,'owner-B:id'));a[a.length-1]^=1;await assert.rejects(()=>unseal(a,key,'owner-A:id'));});
+test('answer checker accepts fractions and rejects executable or malformed input',()=>{assert(gradeAnswer(' 8 / 2 ',4));assert(gradeAnswer('-1/2',-.5));for(const input of ['','1/0','Infinity','4x','4;alert(1)','2+2','NaN','0x04'])assert(!gradeAnswer(input,4));assert(!gradeAnswer('5',4));});
+test('every syllabus topic has finite original exercise variants and truthful source fields',()=>{assert.equal(new Set(topics.map(t=>t.id)).size,35);for(const t of topics){for(let n=0;n<14;n++){const e=exercise(t.id,n);assert(Number.isFinite(e.answer));assert(e.question.length>5);assert(e.steps.length>0);assert.equal(e.source.year,null);assert.equal(e.source.url,null);}}});
+test('generated exercises keep balanced inline math delimiters',()=>{for(const t of topics)for(let n=0;n<14;n++){const e=exercise(t.id,n);for(const text of [e.question,...e.steps,e.variant])assert.equal((text.match(/\$/g)||[]).length%2,0,`${t.id} seed ${n}`);}});
+test('FSRS schedules a real card using review grade and preserves progression',()=>{const now=new Date('2026-09-25T00:00:00Z'),card=createEmptyCard(now),f=fsrs({enable_fuzz:false});const again=f.next(card,now,Rating.Again).card,easy=f.next(card,now,Rating.Easy).card;assert(again.due>now);assert(easy.due>again.due);assert.equal(easy.reps,1);});
