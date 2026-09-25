@@ -1,5 +1,7 @@
 # 雨知 · 早觉雨大人的温柔自习室
 
+Cloudflare 公网部署请按 [Workers 部署说明](docs/cloudflare-deploy.md) 设置：构建 `npm run build`，部署 `npm run deploy`。
+
 早觉雨大人，网页现在优先使用这个项目里的本地资料。你可以先检索、核对原页，再把选中的短摘录带入提问。
 
 ## 一键启动
