@@ -1,4 +1,16 @@
 import {failure,HttpError,json,env} from '@/lib/server';
-import {validateModelConfig} from '@/lib/providers';
-export async function POST(request:Request){try{const b=await json(request,10000);let config;try{config=validateModelConfig({...b.config,textModel:b.config?.textModel||'list'},env.MODEL_ALLOWED_HOSTS)}catch(e){throw new HttpError((e as Error).message)}const apiKey=typeof b.key==='string'&&b.key.length>=8?b.key:(config.provider==='deepseek'&&typeof env.DEEPSEEK_API_KEY==='string'?env.DEEPSEEK_API_KEY:'');if(apiKey.length<8||apiKey.length>512)throw new HttpError('早觉雨大人，请填写所选服务的密钥。');const r=await fetch(config.baseUrl+'/models',{headers:{Authorization:'Bearer '+apiKey},redirect:'error',signal:AbortSignal.timeout(20000)});if(!r.ok){let detail='';try{const raw=await r.text();const parsed=JSON.parse(raw);detail=String(parsed.error?.message||parsed.message||'').slice(0,200)}catch{};throw new HttpError(`早觉雨大人，模型列表请求返回 HTTP ${r.status}${detail?`（${detail}）`:''}。请检查密钥和地址，也可以手工填写模型 ID。`,502)}const data=await r.json() as any;return Response.json({models:(Array.isArray(data.data)?data.data:[]).map((x:any)=>x.id).filter((x:unknown)=>typeof x==='string'&&x.length<150).slice(0,300)},{headers:{'Cache-Control':'no-store'}})}catch(e){return failure(e)}}
-
+import {validateModelConfig,providers} from '@/lib/providers';
+import {modelKey,modelRequest} from '@/lib/model-request';
+export async function POST(request:Request){
+ try{
+  const b=await json(request,10000);
+  let config;
+  try{config=validateModelConfig({...b.config,textModel:b.config?.textModel||'list'},env.MODEL_ALLOWED_HOSTS);}
+  catch(e){throw new HttpError((e as Error).message);}
+  const apiKey=modelKey(b.key,config.provider==='deepseek'?env.DEEPSEEK_API_KEY:'');
+  const providerName=providers.find(p=>p.id===config.provider)!.name;
+  const data=await modelRequest(config.baseUrl+'/models',{headers:{Authorization:'Bearer '+apiKey}},providerName,20_000);
+  if(!Array.isArray(data?.data))throw new HttpError('早觉雨大人，服务返回的模型列表格式不正确，请检查基础地址。',502);
+  return Response.json({models:data.data.map((x:any)=>x?.id).filter((x:unknown)=>typeof x==='string'&&x.length<150).slice(0,300)},{headers:{'Cache-Control':'no-store'}});
+ }catch(e){return failure(e);}
+}

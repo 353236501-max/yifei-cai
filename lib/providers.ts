@@ -15,5 +15,11 @@ export function validateModelConfig(value:unknown,extraHosts=''):ModelConfig{
  if(url.protocol!=='https:'||url.username||url.password||url.search||url.hash||url.port&&url.port!=='443'||!allowed.has(url.hostname))throw Error('此 API 地址未被允许。可使用千问、DeepSeek、硅基流动；其他域名需加入服务端 MODEL_ALLOWED_HOSTS。');
  if(!/^[A-Za-z0-9_./:@+\-]{1,150}$/.test(c.textModel||''))throw Error('请填写服务商控制台中的文本模型 ID');
  if(c.visionModel&&!/^[A-Za-z0-9_./:@+\-]{1,150}$/.test(c.visionModel))throw Error('图片模型 ID 格式不正确');
+ if(c.provider==='deepseek'){
+  if(url.hostname!=='api.deepseek.com')throw Error('早觉雨大人，DeepSeek 密钥请使用 api.deepseek.com；第三方转接服务请选择其他兼容接口。');
+  const path=url.pathname.replace(/\/+$/,'').replace(/\/(chat\/completions|models)$/,'');
+  if(path!==''&&path!=='/v1')throw Error('早觉雨大人，DeepSeek 基础地址请填写 https://api.deepseek.com 或 https://api.deepseek.com/v1。');
+  url.pathname=path;
+ }
  return {...c,baseUrl:url.href.replace(/\/+$/,'')};
 }

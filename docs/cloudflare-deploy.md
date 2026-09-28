@@ -36,3 +36,13 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 部署后核对首页、模型设置、API 对话、错题保存与图片删除。若失败，保留从第一个 Error 开始的日志；本地构建和 dry-run 成功不等于账号侧部署成功。
 
 参考：[Cloudflare Vite 部署配置](https://developers.cloudflare.com/workers/vite-plugin/get-started/)、[资源自动创建](https://developers.cloudflare.com/changelog/post/2025-10-24-automatic-resource-provisioning/)。
+
+## DeepSeek 调用排查（2026-09-28）
+
+早觉雨大人，在模型设置选择 DeepSeek，填写官方基础地址 https://api.deepseek.com、账号可用的文本模型和 API Key，然后点击“读取账号可用模型”。返回模型列表只证明鉴权与列表接口可达，仍需发送一个短问题验收对话。刷新页面会清除访问者密钥，需要重新填写。
+
+本机 .env 不随 GitHub 部署。若确实需要服务端默认密钥，将 DEEPSEEK_API_KEY 配成 Worker 运行时 Secret；公开 BYOK 分享优先由访问者自行填写，避免访客消耗部署者额度。不要将密钥写入源码、URL 或构建产物。
+
+当前接口分别提示 HTTP 401（鉴权）、402（余额）、429（限流）、连接失败、超时和非 JSON 返回。连接失败本身不能证明密钥无效。模型列表等待 20 秒，对话等待 120 秒，包含读取响应体的等待；不自动重复计费请求。
+
+本次本机实际检查：受限环境和获准联网环境均出现 UND_ERR_CONNECT_TIMEOUT，未获取 HTTP 状态，因此尚未验证真实模型回答或线上连通性。
