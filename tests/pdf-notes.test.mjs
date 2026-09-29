@@ -7,8 +7,11 @@ import {studyTask} from '../lib/study-task.ts';
 test('PDF note has a physical-page reference and every formula renders',()=>{
  for(const note of pdfNotes){
   assert(note.source.endsWith('.pdf'));
-  assert(Number.isInteger(note.page)&&note.page>0);
-  for(const match of note.content.matchAll(/\$\$([\s\S]*?)\$\$|\$([^$\n]+)\$/g)){
+  assert(note.pages.length>0&&note.pages.every(page=>Number.isInteger(page)&&page>0));
+  assert.equal(note.exercises.length,2);
+  const text=[note.content,...note.exercises.flatMap(exercise=>[exercise.question,exercise.hint,exercise.solution])].join('\n');
+  assert.equal((text.match(/\$/g)||[]).length%2,0);
+  for(const match of text.matchAll(/\$\$([\s\S]*?)\$\$|\$([^$\n]+)\$/g)){
    assert.doesNotThrow(()=>katex.renderToString(match[1]||match[2],{throwOnError:true,displayMode:!!match[1]}));
   }
  }

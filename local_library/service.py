@@ -191,14 +191,21 @@ def search(query,subject='',limit=6):
         WHERE search_index MATCH ? AND {where} ORDER BY rank LIMIT ?''',[match,*params,limit*4]).fetchall()
         scored=[]
         for row in rows:
+            # Files can be moved between periodic scans. Never cite a missing source.
+            try: safe_file(row['path'])
+            except ValueError: continue
             text=row['text'];score=sum(1 for t in terms if t in text.lower())+ (10 if query in text else 0)
             indexes=[text.lower().find(t) for t in terms if t in text.lower()];pos=max(0,min(indexes or [0])-60)
-            item={'id':row['id'],'title':row['title'],'path':row['path'],'page':row['page'],'subject':row['subject'],'snippet':clean_snippet(text[pos:pos+420]),'quality':'text','extraction':row['quality'],'year':row['year'],'year_inferred':True,'number':None,'exam':'待核对','confidence':'本地资料，题号与出处需核对','source':'local','score':score}
+            raw_snippet=text[pos:pos+420]
+            broken_symbols=bool(re.search(r'[\uf000-\uf8ff\ufffd]',raw_snippet))
+            quality='needs_review' if broken_symbols else 'text'
+            snippet=clean_snippet(re.sub(r'[\uf000-\uf8ff\ufffd]+','【未识别符号】',raw_snippet))
+            item={'id':row['id'],'title':row['title'],'path':row['path'],'page':row['page'],'subject':row['subject'],'snippet':snippet,'quality':quality,'extraction':row['quality'],'year':row['year'],'year_inferred':True,'number':None,'exam':'待核对','confidence':'含未识别符号，需核对原页并校正' if broken_symbols else '本地资料，题号与出处需核对','source':'local','score':score}
             scored.append(item)
         scored.sort(key=lambda x:x['score'],reverse=True)
         if not scored:
             names=db.execute(f'SELECT d.* FROM documents d WHERE {where} AND title LIKE ? LIMIT ?',[*params,'%'+query+'%',limit]).fetchall()
-            return [{'id':r['id'],'title':r['title'],'path':r['path'],'page':1,'subject':r['subject'],'snippet':'文件名匹配；尚无可用文本页，请打开原页或执行按页 OCR。','quality':'filename_only','confidence':'仅文件名，不作为内容证据','source':'local','year':r['year']} for r in names]
+            return [{'id':r['id'],'title':r['title'],'path':r['path'],'page':1,'subject':r['subject'],'snippet':'文件名匹配；尚无可用文本页，请打开原页或执行按页 OCR。','quality':'filename_only','confidence':'仅文件名，不作为内容证据','source':'local','year':r['year']} for r in names if (ROOT/r['path']).is_file()]
         unique=[];seen=set()
         for item in scored:
             fingerprint=re.sub(r'\s+','',item['snippet'])

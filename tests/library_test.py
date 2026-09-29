@@ -28,6 +28,16 @@ class LibraryTests(unittest.TestCase):
         self.assertEqual(lib.search('虚拟内存')[0]['page'],1)
         file.unlink();lib.scan()
         self.assertEqual(lib.search('虚拟内存'),[])
+    def test_missing_file_and_broken_formula_never_become_evidence(self):
+        file=lib.ROOT/'数学二导数.txt'
+        file.write_text('导数定义需要检查差商极限和定义域，含有未识别的符号 f\uf0a2 与等式条件，不应擅自丢掉符号后改编题目。',encoding='utf8')
+        lib.scan();lib.index_document(self.row())
+        hit=lib.search('导数定义')[0]
+        self.assertEqual(hit['quality'],'needs_review')
+        self.assertIn('【未识别符号】',hit['snippet'])
+        self.assertNotIn('\uf0a2',hit['snippet'])
+        file.unlink() # search must reject it even before the next scan
+        self.assertEqual(lib.search('导数定义'),[])
     def test_scope_and_paths(self):
         self.assertEqual(lib.classify(pathlib.Path('数学三真题.pdf'))[2],0)
         self.assertEqual(lib.classify(pathlib.Path('计算机/操作系统.pdf'))[0],'操作系统')
