@@ -1,0 +1,23 @@
+.pet{position:fixed;width:248px;max-width:calc(100vw - 16px);z-index:35;pointer-events:none;color:#263c34;font-size:14px;}
+.panel{pointer-events:auto;background:#fffffff5;border:1px solid #d6ddcf;border-radius:18px;padding:14px;box-shadow:0 8px 28px #143c2520;max-height:calc(100dvh - 160px);overflow:auto;}
+.panel header{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.panel header button{padding:5px;border-radius:8px;}
+.panel p{font-size:14px;line-height:1.7;margin:10px 0;}
+.panel a{display:block;font-size:12px;color:#526654;text-decoration:underline;margin-top:12px;}
+.energy{display:flex;align-items:center;gap:8px;font-size:12px;margin:10px 0;}
+.energy meter{width:80px;flex:1;}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.actions button{display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #d6ddcf;background:#f1f5ec;border-radius:9px;min-height:36px;padding:6px;font-size:14px;}
+.actions button:hover{background:#e2ebdb;}
+.actions button:disabled{opacity:.6;cursor:default;}
+.avatarRow{display:flex;justify-content:flex-end;}
+.avatar{pointer-events:auto;touch-action:none;user-select:none;width:120px;height:120px;display:grid;place-items:center;border:0;background:transparent;border-radius:20px;cursor:grab;}
+.avatar:active{cursor:grabbing;}
+.avatar img{width:112px;height:112px;object-fit:contain;pointer-events:none;user-select:none;}
+.caption{display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:12px;}
+.caption span{background:#ffffffe8;border-radius:8px;padding:3px 6px;}
+.caption button{pointer-events:auto;background:#fffffff5;border:1px solid #d6ddcf;border-radius:8px;padding:4px 8px;min-height:32px;color:#3d5746;}
+.restore{position:fixed;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:35;display:flex;align-items:center;gap:6px;border:1px solid #d6ddcf;background:#fffffff5;color:#3d5746;padding:9px 12px;border-radius:24px;font-size:14px;box-shadow:0 3px 14px #143c2515;}
+.pet button:focus-visible,.restore:focus-visible{outline:3px solid #26715b;outline-offset:3px;}
+@media(max-width:600px){.avatar{width:96px;height:100px;}.avatar img{width:92px;height:92px;}.panel{max-height:calc(100dvh - 140px);}.caption span{display:none;}}
+
