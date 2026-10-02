@@ -102,9 +102,10 @@ export default function PupuPet() {
     return () => clearTimeout(timer);
   }, [state]);
 
-  function sound() {
-    if (muted) return;
+  function sound(force = false) {
+    if (muted && !force) return;
     audio.current ??= new Audio('/pets/pupu/meow.wav');
+    audio.current.preload = 'auto';
     audio.current.volume = 0.2;
     audio.current.currentTime = 0;
     void audio.current.play().catch(() => setMessage('早觉雨大人，浏览器暂未播放声音，小猫仍然在这里陪你。'));
@@ -150,10 +151,10 @@ export default function PupuPet() {
       <div className={styles.energy}><span>小猫精力</span><meter min={0} max={100} value={energy} aria-label="小猫精力"/><span>{energy}</span></div>
       <div className={styles.actions}>
         <button onClick={() => {setState('eat'); setEnergy(e => Math.min(100, e + 20)); setMessage('早觉雨大人，小鱼干收到啦！你也记得喝口水。'); sound();}}><Fish size={16}/>喂食</button>
-        <button onClick={() => {setState(state === 'sleep' ? 'idle' : 'sleep'); setMessage(state === 'sleep' ? words[0] : '早觉雨大人，小猫安静休息，你可以按自己的节奏继续。');}}><Moon size={16}/>{state === 'sleep' ? '叫醒' : '休息'}</button>
-        <button onClick={() => {setState('stretch'); setMessage('早觉雨大人，活动一下肩膀，下一步可以慢慢想。');}}><Cat size={16}/>伸懒腰</button>
+        <button onClick={() => {setState(state === 'sleep' ? 'idle' : 'sleep'); setMessage(state === 'sleep' ? words[0] : '早觉雨大人，小猫安静休息，你可以按自己的节奏继续。'); sound();}}><Moon size={16}/>{state === 'sleep' ? '叫醒' : '休息'}</button>
+        <button onClick={() => {setState('stretch'); setMessage('早觉雨大人，活动一下肩膀，下一步可以慢慢想。'); sound();}}><Cat size={16}/>伸懒腰</button>
         <button onClick={encourage}><Sparkles size={16}/>鼓励我</button>
-        <button aria-pressed={!muted} onClick={() => {setMuted(!muted); audio.current?.pause();}}>{muted ? <VolumeX size={16}/> : <Volume2 size={16}/>} {muted ? '开启声音' : '静音'}</button>
+        <button aria-pressed={!muted} onClick={() => {if (muted) {setMuted(false); sound(true);} else {setMuted(true); audio.current?.pause();}}}>{muted ? <VolumeX size={16}/> : <Volume2 size={16}/>} {muted ? '开启声音' : '静音'}</button>
         <button aria-pressed={paused} disabled={reduced} onClick={() => setPaused(!paused)}>{frozen ? <Play size={16}/> : <Pause size={16}/>} {reduced ? '减少动态' : paused ? '播放动画' : '暂停动画'}</button>
       </div>
       <a href="https://github.com/CZengC/pupu_pet" target="_blank" rel="noreferrer">宠物资源：CZengC/pupu_pet</a>
@@ -161,7 +162,7 @@ export default function PupuPet() {
     <div className={styles.avatarRow}>
       <button ref={petButton} className={styles.avatar} onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={endDrag}
         onPointerCancel={endDrag} onLostPointerCapture={() => {drag.current = null;}}
-        onClick={event => {if (suppressClick.current && event.detail !== 0) {suppressClick.current = false; return;} setOpen(!open);}}
+        onClick={event => {if (suppressClick.current && event.detail !== 0) {suppressClick.current = false; return;} setOpen(!open); sound();}}
         onContextMenu={event => {event.preventDefault(); setOpen(true);}}
         onKeyDown={event => {
           const movement: Record<string, Point> = {ArrowLeft:{x:-20,y:0},ArrowRight:{x:20,y:0},ArrowUp:{x:0,y:-20},ArrowDown:{x:0,y:20}};
