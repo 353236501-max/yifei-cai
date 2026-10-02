@@ -16,7 +16,7 @@ test('DeepSeek pasted endpoint is normalized; a mismatched provider cannot recei
 
 test('model requests distinguish errors, do not echo secrets, and parse success',async(t)=>{
  let impl;
- t.mock.method(globalThis,'fetch',async(url,init)=>{assert.equal(init.redirect,'error');assert(init.signal);return impl(url,init)});
+  t.mock.method(globalThis,'fetch',async(url,init)=>{assert.equal(init.redirect,'manual');assert(init.signal);return impl(url,init)});
  impl=async()=>Response.json({choices:[{message:{content:'ok'}}]});
  assert.equal((await modelRequest('https://api.deepseek.com/chat/completions',{},'DeepSeek')).choices[0].message.content,'ok');
  for(const status of [401,402,403,404,429,503]){
@@ -30,3 +30,4 @@ test('model requests distinguish errors, do not echo secrets, and parse success'
  impl=async()=>new Response('<html>gateway failure</html>');
  await assert.rejects(modelRequest('https://api.deepseek.com/models',{},'DeepSeek'),/无法解析/);
 });
+
